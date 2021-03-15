@@ -61,6 +61,10 @@ export default class Disclosure extends Component {
   static initAll(selector = null) {
     selector = selector ?? Disclosure.defaultOptions().disclosureAttribute;
     
+    // The automatic web component initializer accepts an empty Disclosure
+    // instance it uses to "stamp out" specific instances of the component that
+    // get added to the DOM.
+
     define(selector, new Disclosure());
   }
 
