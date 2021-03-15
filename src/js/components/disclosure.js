@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-import { componentDefaults } from '../globalSettings';
 import keyCodes from '../utilities/keyCodes';
 import Component from './component';
 
@@ -30,13 +29,31 @@ export default class Disclosure extends Component {
   }
 
   /**
+   * Gets the default initialization options for the Disclosure component.
+   * 
+   * @static
+   * @return {Object} Default options
+   */
+
+  static get defaultOptions() {
+    return {
+      disclosureAttribute: '[data-disclosure]',
+      toggleAttribute: '[data-disclosure-toggle]',
+      toggleDataProperty: 'toggle',
+      targetAttribute: '[data-disclosure-target]',
+      openEventName: 'disclosureOpen',
+      closeEventName: 'disclosureClose'
+    };
+  }
+
+  /**
    * Initializes all Disclosure components as web components, including those
    * not yet added to the DOM. Only called directly by the client when they
    * are using Rivet in "module" component initialization mode.
    */
 
   static initAll() {
-    define(componentDefaults.disclosure.disclosureAttribute, new Disclosure());
+    define(Disclosure.defaultOptions().disclosureAttribute, new Disclosure());
   }
 
   /**
@@ -48,7 +65,7 @@ export default class Disclosure extends Component {
    */
 
   init(options) {
-    options = Object.assign(componentDefaults.disclosure, options ?? {});
+    options = Object.assign(Disclosure.defaultOptions(), options ?? {});
 
     this._initAttributes(options);
     this._initEventNames(options);
