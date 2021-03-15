@@ -10,7 +10,9 @@ import Component from './component';
 /** 
  * The Disclosure class represents a Rivet disclosure component. A disclosure
  * component provides an interactable toggle element that can be used to hide
- * or show some other element, such as an accordion fold. 
+ * or show some other element, such as an accordion fold.
+ * 
+ * @extends Component
  */
 
 export default class Disclosure extends Component {
