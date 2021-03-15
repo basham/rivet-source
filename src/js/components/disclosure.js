@@ -52,7 +52,7 @@ export default class Disclosure extends Component {
    * Initializes all Disclosure components as web components, including those
    * not yet added to the DOM. Only called directly by the client when they
    * are using Rivet in "module" component initialization mode. In "auto" mode,
-   * the global Rivet.init() calls this method on the client's behalf.
+   * the global `Rivet.init()` method calls this method on the client's behalf.
    * 
    * @static
    * @param {string} selector - Optional selector to use instead of default
