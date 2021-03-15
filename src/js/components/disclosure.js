@@ -1,127 +1,216 @@
 /**
- * Copyright (C) 2018 The Trustees of Indiana University
+ * Copyright (C) 2021 The Trustees of Indiana University
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-import dispatchCustomEvent from '../utilities/dispatchCustomEvent';
+import { componentDefaults } from '../globalSettings';
 import keyCodes from '../utilities/keyCodes';
+import Component from './component';
 
-/**
- * The Disclosure class models an interactive page element that can be used
- * to hide/show another related page element, such as a button that hides or
- * shows a navigation drawer.
+/** 
+ * The Disclosure class represents a Rivet disclosure component. A disclosure
+ * component provides an interactable toggle element that can be used to hide
+ * or show some other element, such as an accordion fold. 
  */
 
-export default class Disclosure {
-  constructor(element, options) {
-    // more parameters than i'd like but we have to maintain backwards
-    // compatibility for v1.x.x. these will be unnecessary in version 2.x.x
-    // as we'll be using web components and both Disclosures/disclosures will
-    // use a unified set of attributes for handling toggles
-    const defaults = {
-      disclosureAttribute: '[data-disclosure]',
-      toggleAttribute: '[data-disclosure-toggle]',
-      toggleDataProperty: 'toggle',
-      targetAttribute: '[data-disclosure-target]',
-      openEventName: 'disclosureOpen',
-      closeEventName: 'disclosureClose'
-    };
+export default class Disclosure extends Component {
 
-    options = Object.assign(defaults, options);
+  /**
+   * Create a Disclosure component instance. Only called directly by the client
+   * when they are using Rivet in "manual" component initialization mode.
+   * 
+   * @param {string} selector - CSS selector of disclosure element
+   * @param {object} options - Component configuration options
+   */
 
-    this.element = element;
+  constructor(selector = null, options = null) {
+    super(selector, options);
+  }
+
+  /**
+   * Initializes all Disclosure components as web components, including those
+   * not yet added to the DOM. Only called directly by the client when they
+   * are using Rivet in "module" component initialization mode.
+   */
+
+  static initAll() {
+    define(componentDefaults.disclosure.disclosureAttribute, new Disclosure());
+  }
+
+  /**
+   * Initializes the Disclosure instance. Called by the constructor when the
+   * client is using Rivet in "manual" component initialization mode; otherwise
+   * this method is called by the automatic web component initializer.
+   * 
+   * @param {object} options - Component configuration options
+   */
+
+  init(options) {
+    options = Object.assign(componentDefaults.disclosure, options ?? {});
+
+    this._initAttributes(options);
+    this._initEventNames(options);
+    this._initChildElements();
+    this._initEventListeners();
+    this._initState();
+    this._excludeIconsFromFocus();
+  }
+
+  /**
+   * Initializes the Disclosure component's element attribute selectors.
+   * 
+   * @param {object} options - Component configuration options
+   */
+
+  _initAttributes(options) {
     this.disclosureAttribute = options.disclosureAttribute;
     this.toggleAttribute = options.toggleAttribute;
     this.toggleDataProperty = options.toggleDataProperty;
     this.targetAttribute = options.targetAttribute;
+  }
+
+  /**
+   * Initializes the Disclosure component's custom event names.
+   * 
+   * @param {object} options - Component configuration options
+   */
+
+  _initEventNames(options) {
     this.openEventName = options.openEventName;
     this.closeEventName = options.closeEventName;
+  }
+
+  /**
+   * Initializes the Disclosure component's child element references.
+   */
+
+  _initChildElements() {
     this.toggleElement = this.element.querySelector(this.toggleAttribute);
     this.targetElement = this.element.querySelector(this.targetAttribute);
+  }
 
-    // Keeps track of the currently active disclosure
+  /**
+   * Initializes the Disclosure component's event listeners.
+   */
+
+  _initEventListeners() {
+    this._handleClick = this._handleClick.bind(this);
+    this._handleKeydown = this._handleKeydown.bind(this);
+  }
+
+  /**
+   * Initializes the Disclosure component's state management variables.
+   */
+
+  _initState() {
     this.isOpen = false;
     this.activeToggle = null;
     this.activeDisclosure = null;
-
-    // Bind methods
-    this._handleClick = this._handleClick.bind(this);
-    this._handleKeydown = this._handleKeydown.bind(this);
-
-    // Make sure icons don't receive focus
-    this.element.querySelector('svg').setAttribute('focusable', 'false');
-
-    this.init();
   }
 
+  /**
+   * Excludes icons within the Disclosure component from receiving focus.
+   */
+
+  _excludeIconsFromFocus() {
+    this.element.querySelector('svg').setAttribute('focusable', 'false');
+  }
+
+  /**
+   * Activates the Disclosure component when it is added to the DOM in "auto"
+   * component initialization mode. In "manual" initialization mode, this
+   * method is called when the Disclosure constructor is called by the client.
+   */
+  
+  connected() {
+    document.addEventListener('click', this._handleClick, false);
+    document.addEventListener('keydown', this._handleKeydown, false);
+  }
+
+  /**
+   * Deactivates the Disclosure component when it is removed from the DOM in
+   * "auto" component initialization mode. In "manual" initialization mode,
+   * this method is called when client explicitly calls a Disclosure instance's
+   * destroy() method.
+   */
+
+  disconnected() {
+    document.removeEventListener('click', this._handleClick, false);
+    document.removeEventListener('keydown', this._handleKeydown, false);
+  }
+
+  /**
+   * Opens the Disclosure component.
+   */
+
   open() {
-    // Return if disabled disclosure is being opened programmatically
+    if (this.toggleElement.hasAttribute('disabled')) return;
+    if ( ! this._fireOpenEvent()) return;
 
-    if (this.toggleElement.hasAttribute('disabled')) {
-      return;
-    }
+    this.isOpen = true;
+    this.toggleElement.setAttribute('aria-expanded', 'true');
+    this.targetElement.removeAttribute('hidden');
+    this.activeToggle = this.toggleElement;
+    this.activeDisclosure = this.targetElement;
+  }
 
-    // Fire a disclosureOpen event
+  /**
+   * Fires a custom browser event indicating the Disclosure was opened.
+   * 
+   * @return {boolean} Whether or not the event was cancelled
+   */
 
-    const openEvent = dispatchCustomEvent(
+  _fireOpenEvent() {
+    return this.dispatchCustomEvent(
       this.openEventName,
       this.toggleElement,
       {
         id: this.toggleElement.dataset[this.toggleDataProperty]
       }
     );
-
-    // Bail if the event was suppressed
-
-    if (!openEvent) return;
-
-    // Set the disclosure's open state to "true"
-
-    this.isOpen = true;
-    this.toggleElement.setAttribute('aria-expanded', 'true');
-
-    // Remove the 'hidden' attribute to show the element to disclose
-
-    this.targetElement.removeAttribute('hidden');
-
-    // Set currently active toggle and disclosed element
-
-    this.activeToggle = this.toggleElement;
-    this.activeDisclosure = this.targetElement;
   }
 
-  close() {
-    /**
-     * If there isn't a currently active disclosure, then bail so close() isn't
-     * fired multiple times.
-     */
-    if (!this.activeToggle) return;
+  /**
+   * Closes the Disclosure component.
+   */
 
-    const closeEvent = dispatchCustomEvent(
+  close() {
+    if ( ! this.activeToggle) return;
+    if ( ! this._fireCloseEvent()) return;
+
+    this.isOpen = false;
+    this.activeToggle.setAttribute('aria-expanded', 'false');
+    this.activeDisclosure.setAttribute('hidden', '');
+    this.activeToggle = null;
+    this.activeDisclosure = null;
+  }
+
+  /**
+   * Fires a custom browser event indicating the Disclosure was closed.
+   * 
+   * @return {boolean} Event was cancelled?
+   */
+
+  _fireCloseEvent() {
+    return this.dispatchCustomEvent(
       this.closeEventName,
       this.toggleElement,
       {
         id: this.toggleElement.dataset[this.toggleDataProperty]
       }
     );
-
-    if (!closeEvent) return;
-
-    this.isOpen = false;
-
-    this.activeToggle.setAttribute('aria-expanded', 'false');
-    this.activeDisclosure.setAttribute('hidden', '');
-
-    // Resets the state variables
-    this.activeToggle = null;
-    this.activeDisclosure = null;
   }
+
+  /**
+   * Handles a click event received by the Disclosure component.
+   * 
+   * @param {Event} event - Click event
+   */
 
   _handleClick(event) {
     const toggle = event.target.closest(this.toggleAttribute);
 
-    // Did it come from inside open disclosure?
-    if (this.targetElement.contains(event.target)) return;
+    if (this._clickOriginatedInOpenDisclosure(event)) return;
 
     // If it came from outside component, close all open disclosures
     if (!toggle && this.activeToggle !== null) {
@@ -137,6 +226,23 @@ export default class Disclosure {
     }
   }
 
+  /**
+   * Returns true if the given click event originated in an open Disclosure.
+   * 
+   * @return {boolean} Click originated in open disclosure?
+   */
+
+  _clickOriginatedInOpenDisclosure(event) {
+    return this.targetElement.contains(event.target);
+  }
+
+  /**
+   * Returns true if the Disclosure component should handle the given
+   * keydown event.
+   * 
+   * @return {boolean} Should handle keydown event?
+   */
+
   _shouldHandleKeydown(event) {
     // If the keydown didn't come from within disclosure component, then bail.
     if (!this.element.contains(event.target)) return false;
@@ -148,7 +254,13 @@ export default class Disclosure {
     return true;
   }
 
-  _handleKeydown(event) {
+  /**
+   * Handles a keydown event received by the Disclosure component.
+   * 
+   * @param {Event} event - Keydown event
+   */
+
+  _handleKeyDown(event) {
     if (!this._shouldHandleKeydown(event)) return;
 
     switch (event.keyCode) {
@@ -171,13 +283,4 @@ export default class Disclosure {
     }
   }
 
-  init() {
-    document.addEventListener('click', this._handleClick, false);
-    document.addEventListener('keydown', this._handleKeydown, false);
-  }
-
-  destroy() {
-    document.removeEventListener('click', this._handleClick, false);
-    document.removeEventListener('keydown', this._handleKeydown, false);
-  }
 }

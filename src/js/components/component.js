@@ -5,10 +5,10 @@
 
 export default class Component {
 
-  constructor(selector) {
+  constructor(selector, options) {
     if (selector) {
       this.element = document.querySelector(selector);
-      this.init();
+      this.init(options);
       this.connected();
     }
   }
