@@ -35,10 +35,10 @@ export default class Disclosure extends Component {
   }
 
   /**
-   * Create a Disclosure component instance. Only called directly by the client
-   * when they are using Rivet in "manual" component initialization mode. In
-   * "auto" mode, the constructor is called on the client's behalf using the
-   * static `Disclosure.initAll()` method.
+   * Creates a Disclosure component instance. Only called directly by the
+   * client when they are using Rivet in "manual" component initialization
+   * mode. In "auto" mode, the constructor is called on the client's behalf
+   * using the static `Disclosure.initAll()` method.
    * 
    * @param {string} selector - CSS selector of disclosure element
    * @param {object} options - Component configuration options
