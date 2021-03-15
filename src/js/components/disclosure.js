@@ -72,7 +72,7 @@ export default class Disclosure extends Component {
    * @param {object} options - Component configuration options
    */
 
-  init(options) {
+  init(options = null) {
     options = Object.assign(Disclosure.defaultOptions(), options ?? {});
 
     this._initAttributes(options);
