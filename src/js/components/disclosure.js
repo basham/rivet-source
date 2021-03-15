@@ -17,18 +17,6 @@ import Component from './component';
 export default class Disclosure extends Component {
 
   /**
-   * Create a Disclosure component instance. Only called directly by the client
-   * when they are using Rivet in "manual" component initialization mode.
-   * 
-   * @param {string} selector - CSS selector of disclosure element
-   * @param {object} options - Component configuration options
-   */
-
-  constructor(selector = null, options = null) {
-    super(selector, options);
-  }
-
-  /**
    * Gets the default initialization options for the Disclosure component.
    * 
    * @static
@@ -44,6 +32,18 @@ export default class Disclosure extends Component {
       openEventName: 'disclosureOpen',
       closeEventName: 'disclosureClose'
     };
+  }
+
+  /**
+   * Create a Disclosure component instance. Only called directly by the client
+   * when they are using Rivet in "manual" component initialization mode.
+   * 
+   * @param {string} selector - CSS selector of disclosure element
+   * @param {object} options - Component configuration options
+   */
+
+  constructor(selector = null, options = null) {
+    super(selector, options);
   }
 
   /**
