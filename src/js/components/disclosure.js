@@ -52,10 +52,13 @@ export default class Disclosure extends Component {
    * are using Rivet in "module" component initialization mode.
    * 
    * @static
+   * @param {string} selector - Optional selector to use instead of default
    */
 
-  static initAll() {
-    define(Disclosure.defaultOptions().disclosureAttribute, new Disclosure());
+  static initAll(selector = null) {
+    selector = selector ?? Disclosure.defaultOptions().disclosureAttribute;
+    
+    define(selector, new Disclosure());
   }
 
   /**
